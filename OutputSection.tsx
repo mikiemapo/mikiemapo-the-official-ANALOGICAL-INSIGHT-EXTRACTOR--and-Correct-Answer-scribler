@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ExtractionResult } from '../types';
+import { ExtractionResult } from './types';
 
 interface OutputSectionProps {
   result: ExtractionResult | null;
@@ -81,7 +81,7 @@ const OutputSection: React.FC<OutputSectionProps> = ({ result, onReset }) => {
                   <p className="text-slate-300">{block.analogousFoundationalConcept}</p>
                 </section>
               </div>
-              
+
               <div className="space-y-4">
                 <section className="bg-red-500/5 border border-red-500/10 p-4 rounded-lg">
                   <h4 className="text-red-400 font-bold uppercase text-[10px] tracking-widest mb-1">Common Confusion & Why It's Wrong</h4>
@@ -105,10 +105,10 @@ const OutputSection: React.FC<OutputSectionProps> = ({ result, onReset }) => {
             <h4 className="text-slate-500 font-bold uppercase text-[10px] tracking-widest mb-3">Grounding Documentation & Sources</h4>
             <div className="flex flex-wrap gap-2">
               {result.sources.map((source, sIdx) => (
-                <a 
+                <a
                   key={sIdx}
-                  href={source.uri} 
-                  target="_blank" 
+                  href={source.uri}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-3 py-1 bg-slate-800 hover:bg-slate-700 text-blue-400 text-xs rounded-full border border-slate-700 transition-colors"
                 >

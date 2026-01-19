@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
-import { cleanAndExtractAnswers } from '../geminiService';
-import { ExtractedQuestion } from '../types';
+import { cleanAndExtractAnswers } from './geminiService';
+import { ExtractedQuestion } from './types';
 
 interface AnswerExtractorProps {
   onPush: (q: ExtractedQuestion) => void;
@@ -130,11 +130,11 @@ const AnswerExtractor: React.FC<AnswerExtractorProps> = ({ onPush, isApiKeySet, 
               <button onClick={() => setResults([])} className="text-[9px] text-slate-700 hover:text-red-400 font-bold uppercase">Clear List</button>
             </div>
           )}
-          
+
           {results.map((q, idx) => {
             const isPushed = pushedIds.has(q.id || q.text);
             const buttonDisabled = isPushed || isStagingFull;
-            
+
             return (
               <div key={idx} className={`p-4 bg-slate-950 border ${isPushed ? 'border-emerald-500/20 opacity-60' : 'border-slate-800'} rounded-2xl space-y-3 transition-all animate-in slide-in-from-left-2`}>
                 <p className={`text-[10px] ${isPushed ? 'text-slate-500' : 'text-slate-400'} line-clamp-3 leading-relaxed`}>{q.text}</p>
@@ -143,11 +143,10 @@ const AnswerExtractor: React.FC<AnswerExtractorProps> = ({ onPush, isApiKeySet, 
                   <button
                     disabled={buttonDisabled}
                     onClick={() => handlePushClick(q)}
-                    className={`w-full py-2 text-[9px] font-black rounded-lg uppercase tracking-widest transition-all ${
-                      isPushed ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 
-                      isStagingFull ? 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700/50' :
-                      'bg-blue-500/5 text-blue-400 hover:bg-blue-400 hover:text-white'
-                    }`}
+                    className={`w-full py-2 text-[9px] font-black rounded-lg uppercase tracking-widest transition-all ${isPushed ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
+                        isStagingFull ? 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700/50' :
+                          'bg-blue-500/5 text-blue-400 hover:bg-blue-400 hover:text-white'
+                      }`}
                   >
                     {isPushed ? 'PUSHED SUCCESS' : isStagingFull ? 'STAGING FULL (6 MAX)' : 'PUSH TO ENGINE'}
                   </button>

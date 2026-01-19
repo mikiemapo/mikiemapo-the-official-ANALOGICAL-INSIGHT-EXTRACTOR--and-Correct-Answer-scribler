@@ -3,12 +3,12 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { AZ104Question, ProcessingStatus, ExtractionResult, ExtractedQuestion } from './types';
 import { processInsights } from './geminiService';
 import { getQuestionHash, checkDuplicate, saveToVault } from './firebase';
-import Header from './components/Header';
-import InputSection from './components/InputSection';
-import OutputSection from './components/OutputSection';
-import VaultView from './components/VaultView';
-import SettingsDrawer from './components/SettingsDrawer';
-import AnswerExtractor from './components/AnswerExtractor';
+import Header from './Header';
+import InputSection from './InputSection';
+import OutputSection from './OutputSection';
+import VaultView from './VaultView';
+import SettingsDrawer from './SettingsDrawer';
+import AnswerExtractor from './AnswerExtractor';
 
 const STORAGE_KEY_INPUT = 'analogical_insight_input';
 
@@ -21,9 +21,15 @@ const App: React.FC = () => {
   const [pendingBatch, setPendingBatch] = useState<any>(null);
   const [isEmbedded, setIsEmbedded] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  
-  // Robust API key check
-  const [isApiKeySet, setIsApiKeySet] = useState<boolean>(() => !!process.env.API_KEY);
+
+  // Robust API key check - checks both localStorage and env
+  const checkApiKey = () => {
+    const localKey = localStorage.getItem('gemini_api_key');
+    const envKey = import.meta.env.VITE_API_KEY;
+    return !!(localKey || envKey);
+  };
+
+  const [isApiKeySet, setIsApiKeySet] = useState<boolean>(checkApiKey);
 
   // Derived state for staging limit using pattern matching for "Question: " to be precise
   const stagedCount = (inputText.match(/Question: /g) || []).length;
@@ -35,8 +41,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const check = setInterval(() => {
-      const currentKey = !!process.env.API_KEY;
-      setIsApiKeySet(currentKey);
+      setIsApiKeySet(checkApiKey());
     }, 2000);
     return () => clearInterval(check);
   }, []);
@@ -66,12 +71,12 @@ const App: React.FC = () => {
     try {
       const formattedQuestions: AZ104Question[] = batch.map(rq => ({
         text: rq,
-        correctAnswer: 'Verified', 
+        correctAnswer: 'Verified',
         explanation: 'Verified'
       }));
 
       const extraction = await processInsights(formattedQuestions);
-      
+
       // Save to vault if Firebase is configured
       try {
         for (let i = 0; i < (extraction.blocks || []).length; i++) {
@@ -93,20 +98,20 @@ const App: React.FC = () => {
 
   const handleInitialScan = useCallback(async () => {
     if (!inputText.trim()) return;
-    
+
     setStatus(ProcessingStatus.LOADING);
     setError(null);
-    
+
     try {
       // Split by double newline or the Question: pattern
       const rawQuestions = inputText.trim().split(/\n\s*\n/).filter(c => c.includes("Question:")).slice(0, 6);
-      
+
       if (rawQuestions.length === 0) {
         throw new Error("No valid questions detected. Ensure you push questions from the Scraper first.");
       }
 
       const hashes = await Promise.all(rawQuestions.map(rq => getQuestionHash(rq)));
-      
+
       // Attempt to check duplicates if Firebase is available
       let duplicates: boolean[] = new Array(hashes.length).fill(false);
       try {
@@ -114,7 +119,7 @@ const App: React.FC = () => {
       } catch (e) {
         console.log("Skipping duplicate check (Firebase not configured)");
       }
-      
+
       const duplicateIndices = duplicates.map((d, i) => d ? i : -1).filter(i => i !== -1);
 
       if (duplicateIndices.length > 0) {
@@ -158,25 +163,25 @@ const App: React.FC = () => {
   return (
     <div className={`mx-auto ${isEmbedded ? 'p-2' : 'max-w-7xl px-4 py-8 md:py-12'} flex flex-col min-h-screen font-sans bg-slate-950 text-slate-50`}>
       {!isEmbedded && <Header />}
-      
+
       <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
         <div className="bg-slate-900 border border-slate-800 p-1 rounded-xl flex gap-1 shadow-inner">
-          <button 
+          <button
             type="button"
-            onClick={() => setView('generator')} 
+            onClick={() => setView('generator')}
             className={`px-6 py-2 rounded-lg text-xs font-bold transition-all ${view === 'generator' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
           >
             GENERATOR
           </button>
-          <button 
+          <button
             type="button"
-            onClick={() => setView('vault')} 
+            onClick={() => setView('vault')}
             className={`px-6 py-2 rounded-lg text-xs font-bold transition-all ${view === 'vault' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
           >
             VAULT
           </button>
         </div>
-        
+
         <div className="flex items-center gap-6">
           <div className="hidden md:flex items-center gap-2">
             <span className={`w-2.5 h-2.5 rounded-full ${isApiKeySet ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500 animate-pulse'}`}></span>
@@ -193,44 +198,44 @@ const App: React.FC = () => {
 
       <main className="flex-1 mt-8">
         {view === 'vault' ? <VaultView /> : (
-          result ? <OutputSection result={result} onReset={handleReset} /> : 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            <div className="lg:col-span-4 h-full">
-              <AnswerExtractor 
-                onPush={handlePushToEngine} 
-                isApiKeySet={isApiKeySet} 
-                isStagingFull={isStagingFull} 
-              />
-            </div>
+          result ? <OutputSection result={result} onReset={handleReset} /> :
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <div className="lg:col-span-4 h-full">
+                <AnswerExtractor
+                  onPush={handlePushToEngine}
+                  isApiKeySet={isApiKeySet}
+                  isStagingFull={isStagingFull}
+                />
+              </div>
 
-            <div className="lg:col-span-8">
-              <InputSection 
-                value={inputText} 
-                onChange={setInputText} 
-                onProcess={handleInitialScan} 
-                onClear={handleReset}
-                onCopy={handleCopyInput}
-                loading={status === ProcessingStatus.LOADING}
-                error={error}
-                duplicateCount={pendingBatch?.duplicateIndices.length || 0}
-                stagedCount={stagedCount}
-                onSkipDuplicates={() => executeProcessing(
-                  pendingBatch.questions.filter((_: any, i: any) => !pendingBatch.duplicateIndices.includes(i)), 
-                  pendingBatch.hashes.filter((_: any, i: any) => !pendingBatch.duplicateIndices.includes(i))
-                )}
-                onProcessAll={() => executeProcessing(pendingBatch.questions, pendingBatch.hashes)}
-              />
+              <div className="lg:col-span-8">
+                <InputSection
+                  value={inputText}
+                  onChange={setInputText}
+                  onProcess={handleInitialScan}
+                  onClear={handleReset}
+                  onCopy={handleCopyInput}
+                  loading={status === ProcessingStatus.LOADING}
+                  error={error}
+                  duplicateCount={pendingBatch?.duplicateIndices.length || 0}
+                  stagedCount={stagedCount}
+                  onSkipDuplicates={() => executeProcessing(
+                    pendingBatch.questions.filter((_: any, i: any) => !pendingBatch.duplicateIndices.includes(i)),
+                    pendingBatch.hashes.filter((_: any, i: any) => !pendingBatch.duplicateIndices.includes(i))
+                  )}
+                  onProcessAll={() => executeProcessing(pendingBatch.questions, pendingBatch.hashes)}
+                />
+              </div>
             </div>
-          </div>
         )}
       </main>
 
-      <SettingsDrawer 
-        isOpen={showSettings} 
-        onClose={() => setShowSettings(false)} 
+      <SettingsDrawer
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
         isApiKeySet={isApiKeySet}
       />
-      
+
       {!isEmbedded && (
         <footer className="mt-12 py-8 border-t border-slate-900 text-center text-slate-700">
           <p className="text-[10px] font-black tracking-widest uppercase opacity-50">Microsoft Learn Powered • Analogical Mastery Framework</p>

@@ -7,13 +7,23 @@ interface SettingsDrawerProps {
 }
 
 const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose, isApiKeySet }) => {
+  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
   const [config, setConfig] = useState(() => {
     const saved = localStorage.getItem('vault_firebase_config');
     return saved ? JSON.parse(saved) : { projectId: '', apiKey: '', authDomain: '', appId: '' };
   });
 
   const save = () => {
+    // Save Gemini API key
+    if (geminiApiKey.trim()) {
+      localStorage.setItem('gemini_api_key', geminiApiKey.trim());
+    } else {
+      localStorage.removeItem('gemini_api_key');
+    }
+
+    // Save Firebase config
     localStorage.setItem('vault_firebase_config', JSON.stringify(config));
+
     alert("Configuration saved. Refreshing application state...");
     window.location.reload();
   };
@@ -33,27 +43,54 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose, isApiK
             <i className="fa-solid fa-xmark text-xl"></i>
           </button>
         </div>
-        
+
         <div className="space-y-8">
           {/* Status Section */}
           <section className="space-y-4">
-             <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Engine & Vault Health</h4>
-             <div className="grid grid-cols-2 gap-3">
-                <div className={`p-4 rounded-xl border ${isApiKeySet ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-500' : 'bg-red-500/5 border-red-500/20 text-red-500'}`}>
-                  <p className="text-[10px] font-bold uppercase mb-1">Logic Engine</p>
-                  <p className="text-sm font-black flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${isApiKeySet ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
-                    {isApiKeySet ? 'ACTIVE' : 'OFFLINE'}
-                  </p>
-                </div>
-                <div className={`p-4 rounded-xl border ${config.projectId ? 'bg-blue-500/5 border-blue-500/20 text-blue-500' : 'bg-slate-800/20 border-slate-800 text-slate-600'}`}>
-                  <p className="text-[10px] font-bold uppercase mb-1">Principle Vault</p>
-                  <p className="text-sm font-black flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${config.projectId ? 'bg-blue-500' : 'bg-slate-700'}`}></span>
-                    {config.projectId ? 'CONNECTED' : 'STANDALONE'}
-                  </p>
-                </div>
-             </div>
+            <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Engine & Vault Health</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div className={`p-4 rounded-xl border ${isApiKeySet ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-500' : 'bg-red-500/5 border-red-500/20 text-red-500'}`}>
+                <p className="text-[10px] font-bold uppercase mb-1">Logic Engine</p>
+                <p className="text-sm font-black flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${isApiKeySet ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+                  {isApiKeySet ? 'ACTIVE' : 'OFFLINE'}
+                </p>
+              </div>
+              <div className={`p-4 rounded-xl border ${config.projectId ? 'bg-blue-500/5 border-blue-500/20 text-blue-500' : 'bg-slate-800/20 border-slate-800 text-slate-600'}`}>
+                <p className="text-[10px] font-bold uppercase mb-1">Principle Vault</p>
+                <p className="text-sm font-black flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${config.projectId ? 'bg-blue-500' : 'bg-slate-700'}`}></span>
+                  {config.projectId ? 'CONNECTED' : 'STANDALONE'}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Gemini API Key Section */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Gemini AI Configuration</h4>
+              <i className="fa-solid fa-key text-slate-700"></i>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Add your Gemini API key to enable quiz analysis and insight generation.
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 ml-1 underline">
+                Get your API key here
+              </a>
+            </p>
+            <div>
+              <label className="block text-[10px] text-slate-500 uppercase mb-1 ml-1">API Key</label>
+              <input
+                type="password"
+                value={geminiApiKey}
+                onChange={e => setGeminiApiKey(e.target.value)}
+                placeholder="Enter your Gemini API key..."
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-slate-300 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-800 font-mono"
+              />
+              {!isApiKeySet && (
+                <p className="text-[10px] text-red-400 mt-2 ml-1">⚠️ API key required for the app to function</p>
+              )}
+            </div>
           </section>
 
           {/* Firebase Settings */}
@@ -67,10 +104,10 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose, isApiK
               {['projectId', 'apiKey', 'authDomain', 'appId'].map(key => (
                 <div key={key}>
                   <label className="block text-[10px] text-slate-500 uppercase mb-1 ml-1">{key}</label>
-                  <input 
-                    type="text" 
-                    value={config[key]} 
-                    onChange={e => setConfig({...config, [key]: e.target.value})}
+                  <input
+                    type="text"
+                    value={config[key]}
+                    onChange={e => setConfig({ ...config, [key]: e.target.value })}
                     placeholder={`Enter ${key}...`}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-slate-300 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-800"
                   />
@@ -81,30 +118,30 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose, isApiK
 
           {/* Integration Snippets */}
           <section className="space-y-4 pt-4 border-t border-slate-800">
-             <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Guide Event Bridge</h4>
-             <p className="text-xs text-slate-400">Add this listener to your study guide to automatically capture extracted mastery insights as they are generated.</p>
-             <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono">
-                <p className="text-[10px] text-blue-400 mb-2">// study-guide.js</p>
-                <code className="text-xs text-slate-500 block leading-tight">
-                  window.addEventListener('message', (e) => &#123; <br/>
-                  &nbsp;&nbsp;if (e.data.type === 'new-insight-generated') &#123; <br/>
-                  &nbsp;&nbsp;&nbsp;&nbsp;const insight = e.data.data; <br/>
-                  &nbsp;&nbsp;&nbsp;&nbsp;console.log("Mastery Captured:", insight); <br/>
-                  &nbsp;&nbsp;&#125; <br/>
-                  &#125;);
-                </code>
-             </div>
+            <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Guide Event Bridge</h4>
+            <p className="text-xs text-slate-400">Add this listener to your study guide to automatically capture extracted mastery insights as they are generated.</p>
+            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono">
+              <p className="text-[10px] text-blue-400 mb-2">// study-guide.js</p>
+              <div className="text-xs text-slate-500 leading-relaxed whitespace-pre-wrap font-mono">
+                {`window.addEventListener('message', (e) => {
+  if (e.data.type === 'new-insight-generated') {
+    const insight = e.data.data;
+    console.log("Mastery Captured:", insight);
+  }
+});`}
+              </div>
+            </div>
           </section>
 
           <div className="pt-4 flex flex-col gap-3">
-            <button 
-              onClick={save} 
+            <button
+              onClick={save}
               className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-blue-900/20 active:scale-[0.98]"
             >
               UPDATE CONFIGURATION
             </button>
-            <button 
-              onClick={onClose} 
+            <button
+              onClick={onClose}
               className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-slate-400 font-bold rounded-xl transition-colors"
             >
               CLOSE SETTINGS

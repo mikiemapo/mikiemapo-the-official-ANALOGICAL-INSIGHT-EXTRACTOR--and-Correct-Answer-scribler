@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { fetchVault, VaultItem } from '../firebase';
+import { fetchVault, VaultItem } from './firebase';
 
 const VaultView: React.FC = () => {
   const [items, setItems] = useState<VaultItem[]>([]);
@@ -19,10 +19,10 @@ const VaultView: React.FC = () => {
   }, []);
 
   const filteredItems = items.filter(item => {
-    const matchesSearch = 
+    const matchesSearch =
       item.foundationalRule.toLowerCase().includes(search.toLowerCase()) ||
       item.domain.toLowerCase().includes(search.toLowerCase());
-    
+
     const itemDate = new Date(item.masteredAt).getTime();
     const start = startDate ? new Date(startDate).setHours(0, 0, 0, 0) : null;
     const end = endDate ? new Date(endDate).setHours(23, 59, 59, 999) : null;
@@ -61,7 +61,7 @@ const VaultView: React.FC = () => {
             <i className="fa-solid fa-vault text-blue-500"></i>
             PRINCIPLE ARCHIVE
           </h2>
-          <button 
+          <button
             onClick={clearFilters}
             className="text-xs font-bold text-slate-500 hover:text-blue-400 uppercase tracking-widest transition-colors"
           >
@@ -72,7 +72,7 @@ const VaultView: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 bg-slate-900/50 p-4 border border-slate-800 rounded-2xl">
           <div className="lg:col-span-2 relative">
             <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
-            <input 
+            <input
               type="text"
               placeholder="Search domain or rule text..."
               value={search}
@@ -82,7 +82,7 @@ const VaultView: React.FC = () => {
           </div>
           <div className="relative">
             <span className="absolute -top-2 left-3 bg-slate-950 px-1 text-[10px] font-bold text-slate-500 uppercase">From</span>
-            <input 
+            <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
@@ -91,7 +91,7 @@ const VaultView: React.FC = () => {
           </div>
           <div className="relative">
             <span className="absolute -top-2 left-3 bg-slate-950 px-1 text-[10px] font-bold text-slate-500 uppercase">To</span>
-            <input 
+            <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
@@ -125,7 +125,7 @@ const VaultView: React.FC = () => {
                 </h3>
               </div>
               <div className="mt-6 pt-4 border-t border-slate-800/50 flex justify-end">
-                <button 
+                <button
                   onClick={() => copyToClipboard(item.foundationalRule)}
                   className="text-[10px] font-black text-slate-500 hover:text-blue-400 flex items-center gap-2 transition-colors tracking-tighter uppercase"
                 >

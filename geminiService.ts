@@ -28,12 +28,26 @@ Identify the correct answer based on markings like "Correct Answer:", bolded opt
 Max 6 questions per extraction.
 `;
 
+const getApiKey = (): string => {
+  // First check localStorage (for browser runtime config)
+  const localKey = localStorage.getItem('gemini_api_key');
+  if (localKey) return localKey;
+
+  // Fallback to environment variable (for local dev)
+  return import.meta.env.VITE_API_KEY || '';
+};
+
 export const cleanAndExtractAnswers = async (rawText: string, pdfBase64?: string): Promise<ExtractedQuestion[]> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
-  const model = 'gemini-3-flash-preview';
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    throw new Error('No API key configured. Please add your Gemini API key in Settings.');
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+  const model = 'gemini-2.0-flash-exp';
 
   const parts: any[] = [{ text: CLEANER_PROMPT }];
-  
+
   if (pdfBase64) {
     parts.push({
       inlineData: {
@@ -71,9 +85,14 @@ export const cleanAndExtractAnswers = async (rawText: string, pdfBase64?: string
 };
 
 export const processInsights = async (questions: AZ104Question[]): Promise<ExtractionResult> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
-  const model = 'gemini-3-pro-preview';
-  
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    throw new Error('No API key configured. Please add your Gemini API key in Settings.');
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+  const model = 'gemini-2.0-flash-thinking-exp-01-21';
+
   const response = await ai.models.generateContent({
     model,
     contents: {
@@ -123,7 +142,7 @@ export const processInsights = async (questions: AZ104Question[]): Promise<Extra
 
   const textOutput = response.text || '{}';
   const jsonStr = textOutput.replace(/```json\n?|\n?```/g, '').trim();
-  
+
   try {
     const result = JSON.parse(jsonStr) as ExtractionResult;
     return { ...result, sources };
