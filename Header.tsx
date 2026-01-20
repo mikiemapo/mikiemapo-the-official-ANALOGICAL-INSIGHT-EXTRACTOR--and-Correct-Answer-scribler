@@ -8,7 +8,7 @@ const Header: React.FC = () => {
         <i className="fa-solid fa-brain-circuit text-blue-400 text-3xl"></i>
       </div>
       <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white italic">
-        ANALOGICAL INSIGHT <span className="text-blue-500">EXTRACTOR</span>
+        ANALOGICAL INSIGHT <span className="text-blue-500">EXTRACTOR</span> <span className="text-sm text-slate-500 not-italic ml-2 font-mono border border-slate-700 rounded px-1.5 py-0.5 align-middle">v1.1.0</span>
       </h1>
       <p className="text-slate-400 max-w-2xl mx-auto text-lg leading-relaxed">
         Transform correctly answered <span className="text-blue-400 font-semibold">AZ-104</span> questions into high-fidelity mental models optimized for NotebookLM slide generation.
